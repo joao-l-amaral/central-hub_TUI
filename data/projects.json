@@ -1,0 +1,42 @@
+[
+  {
+    "name": "Default",
+    "path": "C:\\Users\\AMJ2AV",
+    "isGit": false,
+    "options": {
+      "NEW_TAB": "false"
+    }
+  },
+  {
+    "name": "StarScreen",        
+    "path": "C:\\workspace\\com.bosch.adx.converge.nge.start-screen",               
+    "isGit": true,
+    "options": {
+        "ENV": "development"
+    }
+  },
+  {
+    "name": "Core dashboard",    
+    "path": "C:\\workspace\\com.bosch.adx.converge.core-dashboard-app",             
+    "isGit": true,
+    "options": {
+        "ENV": "development"
+    }
+  },
+  {
+    "name": "NGE",               
+    "path": "C:\\workspace\\nge",                                                    
+    "isGit": true,
+    "options": {
+        "ENV": "development"
+    }
+  },
+  {
+    "name": "EOP Angular Modules",
+    "path": "C:\\workspace\\eop-angular-modules",                                   
+    "isGit": true,
+    "options": {
+        "ENV": "development"
+    }
+  }
+]
