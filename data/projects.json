@@ -24,14 +24,6 @@
     }
   },
   {
-    "name": "NGE",               
-    "path": "C:\\workspace\\nge",                                                    
-    "isGit": true,
-    "options": {
-        "ENV": "development"
-    }
-  },
-  {
     "name": "EOP Angular Modules",
     "path": "C:\\workspace\\eop-angular-modules",                                   
     "isGit": true,

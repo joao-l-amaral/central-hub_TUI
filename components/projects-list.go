@@ -8,6 +8,7 @@ import (
 	"charm.land/bubbles/v2/list"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+	zone "github.com/lrstanley/bubblezone/v2"
 )
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
@@ -25,6 +26,7 @@ type ProjectEntry struct {
 
 type ProjectDTO struct {
 	Name    string
+	ID      string
 	Path    string
 	Branch  string
 	Changes string
@@ -37,14 +39,14 @@ var projectPaths []ProjectEntry
 func AddProjectToList(p ProjectEntry) ProjectDTO {
 	return ProjectDTO{
 		Name:    p.Name,
+		ID:      p.Name,
 		Path:    p.Path,
 		Branch:  LoadProjectGitInfo(p),
 		IsGit:   p.IsGit,
 		Options: p.Options,
 	}
 }
-
-func (i ProjectDTO) Title() string       { return i.Name }
+func (i ProjectDTO) Title() string       { return zone.Mark(i.ID, i.Name) }
 func (i ProjectDTO) Description() string { return i.Branch }
 func (i ProjectDTO) FilterValue() string { return i.Name }
 
@@ -78,4 +80,14 @@ func LoadProjectPaths() []ProjectEntry {
 		return entries
 	}
 	return nil
+}
+
+func GetListPanelStyle(width int, height int) lipgloss.Style {
+	halfWidth := int(float64(width)*0.3) - 2
+	height = int(float64(height) * 0.93)
+
+	return lipgloss.NewStyle().
+		Padding(0, 1).
+		Width(halfWidth).
+		Height(height)
 }

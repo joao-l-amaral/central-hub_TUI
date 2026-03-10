@@ -4,6 +4,7 @@ import (
 	"central_hub_tui/components"
 
 	tea "charm.land/bubbletea/v2"
+	zone "github.com/lrstanley/bubblezone/v2"
 )
 
 const (
@@ -48,9 +49,24 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			return m, nil
 		}
-	case tea.MouseClickMsg:
-		if msg.Button == tea.MouseLeft {
-			// Click at msg.X, msg.Y; check modifiers: msg.Mod
+	case tea.MouseMsg:
+		switch msg := msg.(type) {
+		case tea.MouseReleaseMsg:
+			if msg.Button != tea.MouseLeft {
+				break
+			}
+
+			tea.Println("++++	")
+			for i, listItem := range m.listModel.List.VisibleItems() {
+				v, _ := listItem.(components.ProjectDTO)
+				// Check each item to see if it's in bounds.
+				if zone.Get(v.Name).InBounds(msg) {
+					tea.Println("....")
+					// If so, select it in the list.
+					m.listModel.List.Select(i)
+					break
+				}
+			}
 		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -74,5 +90,22 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.listModel.List.SetShowHelp(false)
 	m.listModel.List.SetShowTitle(false)
 
+	// Update tab content based on current list selection so view shows immediately.
+	m = selectProjectInList(m)
+
 	return m, cmd
+}
+
+// selectProjectInList updates tab content based on the currently selected list item.
+func selectProjectInList(m model) model {
+	if selectedItem, ok := m.listModel.List.SelectedItem().(components.ProjectDTO); ok {
+		if selectedItem.IsGit {
+			m.tabModel.TabContent[0] = "Project Info - " + selectedItem.Name
+			m.tabModel.TabContent[1] = "Git History Tab - " + selectedItem.Name
+		} else {
+			m.tabModel.TabContent[0] = "Project Info"
+			m.tabModel.TabContent[1] = "Git History Tab"
+		}
+	}
+	return m
 }
