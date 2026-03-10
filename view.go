@@ -49,6 +49,7 @@ func (m model) View() tea.View {
 	v := tea.NewView(content)
 	v.AltScreen = true
 	v.WindowTitle = "Central Hub"
+	v.MouseMode = tea.MouseModeAllMotion
 
 	//Actions
 	selectProjectInList(m)
@@ -57,7 +58,7 @@ func (m model) View() tea.View {
 }
 
 func selectProjectInList(m model) {
-	if selectedItem, ok := m.listModel.List.SelectedItem().(components.ProjectEntry); ok {
+	if selectedItem, ok := m.listModel.List.SelectedItem().(components.ProjectDTO); ok {
 		if selectedItem.IsGit {
 			m.tabModel.TabContent[0] = "Project Info - " + selectedItem.Name
 			m.tabModel.TabContent[1] = "Git History Tab - " + selectedItem.Name

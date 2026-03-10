@@ -1,6 +1,6 @@
 [
   {
-    "name": "Default",
+    "name": "Continue to terminal",
     "path": "C:\\Users\\AMJ2AV",
     "isGit": false,
     "options": {
@@ -17,7 +17,7 @@
   },
   {
     "name": "Core dashboard",    
-    "path": "C:\\workspace\\com.bosch.adx.converge.core-dashboard-app",             
+    "path": "C:\\workspace\\core-cloud\\com.bosch.adx.converge.core-dashboard-app",             
     "isGit": true,
     "options": {
         "ENV": "development"

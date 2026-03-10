@@ -23,15 +23,30 @@ type ProjectEntry struct {
 	Options map[string]string `json:"options"`
 }
 
-var projectPaths []ProjectEntry
-
-func AddProjectToList(p ProjectEntry) ProjectEntry {
-	return ProjectEntry{Name: p.Name, Path: p.Path, IsGit: p.IsGit, Options: p.Options}
+type ProjectDTO struct {
+	Name    string
+	Path    string
+	Branch  string
+	Changes string
+	IsGit   bool
+	Options map[string]string
 }
 
-func (i ProjectEntry) Title() string       { return i.Name }
-func (i ProjectEntry) Description() string { return i.Path }
-func (i ProjectEntry) FilterValue() string { return i.Name }
+var projectPaths []ProjectEntry
+
+func AddProjectToList(p ProjectEntry) ProjectDTO {
+	return ProjectDTO{
+		Name:    p.Name,
+		Path:    p.Path,
+		Branch:  LoadProjectGitInfo(p),
+		IsGit:   p.IsGit,
+		Options: p.Options,
+	}
+}
+
+func (i ProjectDTO) Title() string       { return i.Name }
+func (i ProjectDTO) Description() string { return i.Branch }
+func (i ProjectDTO) FilterValue() string { return i.Name }
 
 func SetInnerListHeight(msg tea.WindowSizeMsg) int {
 	panelHeight := int(float64(msg.Height) * 0.95)

@@ -48,6 +48,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			return m, nil
 		}
+	case tea.MouseClickMsg:
+		if msg.Button == tea.MouseLeft {
+			// Click at msg.X, msg.Y; check modifiers: msg.Mod
+		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
