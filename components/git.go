@@ -69,6 +69,52 @@ func colorForBranch(branch string) color.Color {
 	}
 }
 
+// BuildHistoryContent renders git commit history lazygit-style.
+func BuildHistoryContent(project ProjectDTO) string {
+	logOut, err := gitCmd(project.Path, "log", "--pretty=format:%h|%an|%cr|%s", "-n", "15") //TODO set the number os commits showing on available space in the tab
+	if err != nil || strings.TrimSpace(logOut) == "" {
+		return "(no commits)"
+	}
+
+	lines := strings.Split(strings.TrimSpace(logOut), "\n")
+	var hb strings.Builder
+
+	prStyle := lipgloss.NewStyle().Padding(0, 0, 0, 2).Foreground(style.GetGoldenColor())
+	normalStyle := lipgloss.NewStyle().Padding(0, 0, 0, 2).Foreground(style.GetInfoColor())
+
+	for i, ln := range lines {
+		parts := strings.SplitN(ln, "|", 4)
+		if len(parts) < 4 {
+			continue
+		}
+
+		author := lipgloss.NewStyle().Padding(0, 0, 0, 8).Foreground(style.GetNeutralColor()).Bold(true).Render(parts[1])
+		commitDate := lipgloss.NewStyle().Foreground(style.GetNeutralColor()).Render(parts[2])
+		commitMsg := lipgloss.NewStyle().Align(lipgloss.Left).Foreground(style.GetNeutralColor()).Render(parts[3])
+
+		var hash string
+		if strings.Contains(parts[3], "Pull request") {
+			hash = prStyle.Render(parts[0])
+		} else {
+			hash = normalStyle.Render(parts[0])
+		}
+
+		hb.WriteString(hash)
+		hb.WriteString(" ")
+		hb.WriteString(commitMsg)
+		hb.WriteString("\n")
+		hb.WriteString("   ")
+		hb.WriteString(author)
+		hb.WriteString(" ")
+		hb.WriteString(commitDate)
+		if i < len(lines)-1 {
+			hb.WriteString("\n")
+		}
+	}
+	return hb.String()
+}
+
+// get current branch and status for a project, returning a formatted string with colors and change counts.
 func LoadProjectGitInfo(project ProjectEntry) string {
 	reBranchClean := regexp.MustCompile(`HEAD detached|fatal`)
 
@@ -81,16 +127,18 @@ func LoadProjectGitInfo(project ProjectEntry) string {
 	porcelain, _ := gitCmd(project.Path, "status", "--porcelain")
 	added, modified, deleted := countChanges(porcelain)
 
-	var changes string
+	var parts []string
 	if added > 0 {
-		changes += fmt.Sprintf(" +%d", added)
+		parts = append(parts, lipgloss.NewStyle().Foreground(style.GetSuccessColor()).Render(fmt.Sprintf("+%d", added)))
 	}
 	if modified > 0 {
-		changes += fmt.Sprintf(" ~%d", modified)
+		parts = append(parts, lipgloss.NewStyle().Foreground(style.GetNeutralColor()).Render(fmt.Sprintf("~%d", modified)))
 	}
 	if deleted > 0 {
-		changes += fmt.Sprintf(" -%d", deleted)
+		parts = append(parts, lipgloss.NewStyle().Foreground(style.GetDangerColor()).Render(fmt.Sprintf("-%d", deleted)))
 	}
+
+	changes := strings.Join(parts, " ")
 
 	var branchDisplay string
 	if branch != "" {
@@ -99,5 +147,45 @@ func LoadProjectGitInfo(project ProjectEntry) string {
 		branchDisplay = branch
 	}
 
-	return branchDisplay
+	return branchDisplay + " " + changes
+}
+
+func LoadChangedFiles(project ProjectEntry) []FileChange {
+	rePath := regexp.MustCompile(`^(.{2})\s(.*)$`)
+
+	porcelain, _ := gitCmd(project.Path, "status", "--porcelain")
+
+	var editedFiles []FileChange
+	if strings.TrimSpace(porcelain) != "" {
+		for _, l := range strings.Split(strings.TrimSpace(porcelain), "\n") {
+			if l == "" {
+				continue
+			}
+			var path, code string
+			if m := rePath.FindStringSubmatch(l); m != nil {
+				status := strings.TrimSpace(m[1])
+				path = strings.TrimSpace(m[2])
+				switch {
+				case strings.Contains(status, "?"):
+					code = "?"
+				case strings.Contains(status, "A"):
+					code = "A"
+				case strings.Contains(status, "D"):
+					code = "D"
+				case strings.Contains(status, "M"):
+					code = "M"
+				default:
+					code = status
+				}
+			} else {
+				path = strings.TrimSpace(l)
+			}
+			if strings.Contains(path, "->") {
+				parts := strings.Split(path, "->")
+				path = strings.TrimSpace(parts[len(parts)-1])
+			}
+			editedFiles = append(editedFiles, FileChange{Path: path, Code: code})
+		}
+	}
+	return editedFiles
 }

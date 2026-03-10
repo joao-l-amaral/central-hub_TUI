@@ -1,6 +1,7 @@
 package components
 
 import (
+	"fmt"
 	"strings"
 
 	"central_hub_tui/style"
@@ -39,7 +40,7 @@ func TabStyles(bgIsDark bool) *Styles {
 
 	inactiveTabBorder := tabBorderWithBottom("┴", "─", "┴")
 	activeTabBorder := tabBorderWithBottom("┘", " ", "└")
-	highlightColor := lightDark(lipgloss.Color(style.ColorToHex(style.GetPrimaryColor())), lipgloss.Color(style.ColorToHex(style.GetPrimaryColor())))
+	highlightColor := lightDark(lipgloss.Color(style.ColorToHex(style.GetNeutralColor())), lipgloss.Color(style.ColorToHex(style.GetNeutralColor())))
 
 	s := new(Styles)
 	s.doc = lipgloss.NewStyle()
@@ -48,7 +49,8 @@ func TabStyles(bgIsDark bool) *Styles {
 		BorderForeground(highlightColor).
 		Padding(0, 1)
 	s.activeTab = s.inactiveTab.
-		Border(activeTabBorder, true)
+		Border(activeTabBorder, true).
+		Foreground(lipgloss.Color(style.ColorToHex(style.GetPrimaryColor())))
 	s.window = lipgloss.NewStyle().
 		BorderForeground(highlightColor).
 		Padding(2, 0).
@@ -108,10 +110,51 @@ func TabView(m TabModel) string {
 
 	doc.WriteString(
 		s.window.
-			Width(m.Width).        // -2 for left+right border
-			Height(contentHeight). // fills remaining terminal height
+			Width(m.Width).
+			Height(contentHeight).
+			Align(lipgloss.Left).
 			Render(m.TabContent[m.ActiveTab]),
 	)
 
 	return s.doc.Render(doc.String())
+}
+
+func GetTabPanelStyle(width int, height int) lipgloss.Style {
+	halfWidth := int(float64(width) * 0.7)
+	height = int(float64(height) * 0.93)
+
+	return lipgloss.NewStyle().
+		Width(halfWidth).
+		Height(height)
+}
+
+// buildDetailContent renders the detail pane content for a git project.
+func BuildInfoContent(p ProjectDTO) string {
+	var b strings.Builder
+	b.WriteString(fmt.Sprintf("Path: %s\n\nBranch: %s%s\n", p.Path, p.Branch, p.Changes))
+	b.WriteString("\nEdited files:\n")
+	if len(p.EditedFiles) == 0 {
+		b.WriteString("  (none)")
+	} else {
+		for _, fc := range p.EditedFiles {
+			var marker string
+			var ms lipgloss.Style
+			switch fc.Code {
+			case "A", "?":
+				marker, ms = "+", lipgloss.NewStyle().Foreground(style.GetSuccessColor())
+			case "D":
+				marker, ms = "-", lipgloss.NewStyle().Foreground(style.GetDangerColor())
+			case "M":
+				marker, ms = "~", lipgloss.NewStyle().Foreground(style.GetGoldenColor())
+			default:
+				marker, ms = " ", lipgloss.NewStyle().Foreground(style.GetNeutralColor())
+			}
+			b.WriteString("  ")
+			b.WriteString(ms.Render(marker))
+			b.WriteString(" ")
+			b.WriteString(fc.Path)
+			b.WriteString("\n")
+		}
+	}
+	return b.String()
 }

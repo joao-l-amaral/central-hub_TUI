@@ -24,26 +24,33 @@ type ProjectEntry struct {
 	Options map[string]string `json:"options"`
 }
 
+type FileChange struct {
+	Path string
+	Code string // A=added, M=modified, D=deleted, ?=untracked
+}
+
 type ProjectDTO struct {
-	Name    string
-	ID      string
-	Path    string
-	Branch  string
-	Changes string
-	IsGit   bool
-	Options map[string]string
+	Name        string
+	ID          string
+	Path        string
+	Branch      string
+	Changes     string
+	IsGit       bool
+	EditedFiles []FileChange
+	Options     map[string]string
 }
 
 var projectPaths []ProjectEntry
 
 func AddProjectToList(p ProjectEntry) ProjectDTO {
 	return ProjectDTO{
-		Name:    p.Name,
-		ID:      p.Name,
-		Path:    p.Path,
-		Branch:  LoadProjectGitInfo(p),
-		IsGit:   p.IsGit,
-		Options: p.Options,
+		Name:        p.Name,
+		ID:          p.Name,
+		Path:        p.Path,
+		Branch:      LoadProjectGitInfo(p),
+		EditedFiles: LoadChangedFiles(p),
+		IsGit:       p.IsGit,
+		Options:     p.Options,
 	}
 }
 func (i ProjectDTO) Title() string       { return zone.Mark(i.ID, i.Name) }

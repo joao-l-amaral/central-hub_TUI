@@ -1,0 +1,10 @@
+[
+  {
+    "name": "Project's name",
+    "path": "C:\\Project's path",
+    "isGit": false,
+    "options": {
+      "NEW_TAB": "false"
+    }
+  }
+]

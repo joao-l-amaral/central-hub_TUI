@@ -13,10 +13,15 @@ var (
 	colorGray   = lipgloss.Color("#BDBDBD")
 	colorBlue   = lipgloss.Color("#4A90E2")
 	colorGreen  = lipgloss.Color("#2ECC71")
+	colorGold   = lipgloss.Color("#bda20e")
 )
 
 func GetPrimaryColor() color.Color {
 	return colorOrange
+}
+
+func GetGoldenColor() color.Color {
+	return colorGold
 }
 
 func GetDangerColor() color.Color {

@@ -56,13 +56,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				break
 			}
 
-			tea.Println("++++	")
 			for i, listItem := range m.listModel.List.VisibleItems() {
 				v, _ := listItem.(components.ProjectDTO)
-				// Check each item to see if it's in bounds.
 				if zone.Get(v.Name).InBounds(msg) {
-					tea.Println("....")
-					// If so, select it in the list.
 					m.listModel.List.Select(i)
 					break
 				}
@@ -100,8 +96,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func selectProjectInList(m model) model {
 	if selectedItem, ok := m.listModel.List.SelectedItem().(components.ProjectDTO); ok {
 		if selectedItem.IsGit {
-			m.tabModel.TabContent[0] = "Project Info - " + selectedItem.Name
-			m.tabModel.TabContent[1] = "Git History Tab - " + selectedItem.Name
+			m.tabModel.TabContent[0] = components.BuildInfoContent(selectedItem)
+			m.tabModel.TabContent[1] = components.BuildHistoryContent(selectedItem)
 		} else {
 			m.tabModel.TabContent[0] = "Project Info"
 			m.tabModel.TabContent[1] = "Git History Tab"
