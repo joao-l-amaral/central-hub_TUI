@@ -2,19 +2,32 @@ package components
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
+
+	"central_hub_tui/style"
 
 	"charm.land/bubbles/v2/list"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
-	zone "github.com/lrstanley/bubblezone/v2"
 )
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
 
-type ListModel struct {
-	List list.Model
+type ProjectListModel struct {
+	List       list.Model
+	window     lipgloss.Style
+	gap        lipgloss.Style
+	IsSelected bool
+}
+
+type ProjectWorktreeListModel struct {
+	List       list.Model
+	window     lipgloss.Style
+	gap        lipgloss.Style
+	IsSelected bool
 }
 
 type ProjectEntry struct {
@@ -53,12 +66,12 @@ func AddProjectToList(p ProjectEntry) ProjectDTO {
 		Options:     p.Options,
 	}
 }
-func (i ProjectDTO) Title() string       { return zone.Mark(i.ID, i.Name) }
+func (i ProjectDTO) Title() string       { return i.Name }
 func (i ProjectDTO) Description() string { return i.Branch }
 func (i ProjectDTO) FilterValue() string { return i.Name }
 
 func SetInnerListHeight(msg tea.WindowSizeMsg) int {
-	panelHeight := int(float64(msg.Height) * 0.95)
+	panelHeight := int(float64(msg.Height) * 0.5)
 	return panelHeight - 4
 }
 
@@ -91,10 +104,63 @@ func LoadProjectPaths() []ProjectEntry {
 
 func GetListPanelStyle(width int, height int) lipgloss.Style {
 	halfWidth := int(float64(width)*0.3) - 2
-	height = int(float64(height) * 0.93)
+	height = int(float64(height) / 2)
 
 	return lipgloss.NewStyle().
 		Padding(0, 1).
+		Border(lipgloss.RoundedBorder()).
+		//UnsetBorderTop().
+		Width(halfWidth)
+}
+
+func GetWorktreePanelStyle(width int, height int) lipgloss.Style {
+	halfWidth := int(float64(width)*0.3) - 2
+	height = int(float64(height)/2) - 2
+
+	return lipgloss.NewStyle().
+		Padding(0, 1).
+		Border(lipgloss.RoundedBorder()).
 		Width(halfWidth).
 		Height(height)
+}
+
+func RoundedTitleBox(title, content string, width int, height int, isSelected bool, showCounter bool) string {
+	titleLen := len(title) // ╭ title ╮
+	fillerLen := max(0, width-titleLen-8)
+
+	focusColor := lipgloss.Color(style.ColorToHex(style.GetNeutralColor()))
+
+	if isSelected {
+		focusColor = lipgloss.Color(style.ColorToHex(style.GetPrimaryColor()))
+	}
+
+	// Title row: ╭─ title ─╮ (manual top)
+	// Box-drawing chars stay in the neutral color; only the title text uses focusColor.
+	borderColor := lipgloss.Color(style.ColorToHex(style.GetNeutralColor()))
+	borderStyle := lipgloss.NewStyle().Foreground(borderColor)
+	styledTitle := lipgloss.NewStyle().Bold(true).Foreground(focusColor).Render(title)
+
+	titlePrefix := "╭──── "
+	if showCounter {
+		titlePrefix = fmt.Sprintf("╭─[%d] ", 0)
+	}
+
+	titleRow := borderStyle.Render(titlePrefix) +
+		styledTitle +
+		borderStyle.Render(fmt.Sprintf(" %s╮", strings.Repeat("─", fillerLen)))
+
+	// Content box: no top border, rounded sides/bottom
+	boxStyle := lipgloss.NewStyle().
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderTop(false).
+		BorderLeft(true).
+		BorderRight(true).
+		BorderBottom(true).
+		BorderForeground(lipgloss.Color("#FAF4E9")).
+		Padding(1).
+		Width(width).
+		Height(height - 5) // Minus title row
+
+	// Join
+	return lipgloss.JoinVertical(lipgloss.Top, titleRow, boxStyle.Render(content))
 }

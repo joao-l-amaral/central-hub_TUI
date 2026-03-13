@@ -6,16 +6,11 @@ import (
 	"central_hub_tui/components"
 	"central_hub_tui/style"
 
-	zone "github.com/lrstanley/bubblezone/v2"
-
 	"charm.land/bubbles/v2/list"
 	tea "charm.land/bubbletea/v2"
 )
 
 func main() {
-	// Initialize the global bubblezone manager early so components can create zones.
-	zone.NewGlobal()
-	defer zone.Close()
 	// Load from json file
 	projects := components.LoadProjectPaths()
 
@@ -36,7 +31,7 @@ func main() {
 	tabContent := []string{"Info Tab", "Git History Tab", "Worktrees"}
 
 	m := model{
-		listModel: components.ListModel{
+		projectListModel: components.ProjectListModel{
 			List: list.New(items, delegate, 0, 0),
 		},
 		tabModel: components.TabModel{
@@ -44,14 +39,13 @@ func main() {
 			TabContent: tabContent,
 			Styles:     components.TabStyles(true),
 			ActiveTab:  0,
+			Focused:    false,
 		},
 		footerModel: components.FooterModel{
 			ProjectName: "Central Hub",
 			Height:      3,
 		},
 	}
-
-	zone.NewGlobal()
 
 	p := tea.NewProgram(m)
 

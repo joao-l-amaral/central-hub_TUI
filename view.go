@@ -2,30 +2,50 @@ package main
 
 import (
 	"central_hub_tui/components"
+	"central_hub_tui/style"
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
-	zone "github.com/lrstanley/bubblezone/v2"
 )
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
 
 func (m model) View() tea.View {
 
-	projectListStyle := components.GetListPanelStyle(m.width, m.height)
-	tabStyle := components.GetTabPanelStyle(m.width, m.height)
+	halfWidth := int(float64(m.width)*0.3) - 2
+
+	tabStyle := components.GetTabPanelStyle(m.width+10, m.height)
 	footerStyle := components.GetFooterStyle(m.width, m.footerModel.Height)
 
-	projectListComponentView := m.listModel.List.View()
-	projectListPanel := zone.Scan(projectListStyle.Render(projectListComponentView))
+	switch m.focused {
+	case FocusProject:
+		m.projectListModel.IsSelected = true
+		m.projectWorktreeList.IsSelected = false
+	case FocusWorktree:
+		m.projectListModel.IsSelected = false
+		m.projectWorktreeList.IsSelected = true
+	case FocusTab:
+		m.projectListModel.IsSelected = false
+		m.projectWorktreeList.IsSelected = false
+		tabStyle = tabStyle.BorderForeground(lipgloss.Color(style.ColorToHex(style.GetPrimaryColor())))
+	}
 
+	projectListComponentView := m.projectListModel.List.View()
+	projectListPanel := components.RoundedTitleBox("Projects", projectListComponentView, halfWidth, m.height/2, m.projectListModel.IsSelected, false)
+
+	worktreeView := m.projectWorktreeList.List.View()
+	worktreePanel := components.RoundedTitleBox("Worktrees", worktreeView, halfWidth, m.height/2, m.projectWorktreeList.IsSelected, true)
+
+	// mark tabModel focused state so TabView can render focused styling
+	m.tabModel.Focused = (m.focused == FocusTab)
 	tabView := components.TabView(m.tabModel)
 	tabPanel := tabStyle.Render(tabView)
 
 	footView := components.GetFooterContent(m.footerModel)
 	footer := footerStyle.Render(footView)
 
-	row1 := lipgloss.JoinHorizontal(lipgloss.Top, projectListPanel, tabPanel)
+	col1 := lipgloss.JoinVertical(lipgloss.Left, projectListPanel, worktreePanel)
+	row1 := lipgloss.JoinHorizontal(lipgloss.Top, col1, tabPanel)
 
 	content := lipgloss.JoinVertical(lipgloss.Left, row1, footer)
 	view := tea.NewView(content)

@@ -16,6 +16,7 @@ type TabModel struct {
 	ActiveTab  int
 	Height     int
 	Width      int
+	Focused    bool
 }
 
 type Styles struct {
@@ -27,31 +28,17 @@ type Styles struct {
 	gap         lipgloss.Style
 }
 
-func tabBorderWithBottom(left, right string) lipgloss.Border {
-	border := lipgloss.HiddenBorder()
-
-	border.MiddleLeft = left
-	border.MiddleRight = right
-	// border.Bottom = middle
-	// border.BottomRight = right
-	return border
-}
-
 func TabStyles(bgIsDark bool) *Styles {
 	lightDark := lipgloss.LightDark(bgIsDark)
 
-	// inactiveTabBorder := tabBorderWithBottom("─", "─")
-	// activeTabBorder := tabBorderWithBottom("─", "─")
 	highlightColor := lightDark(lipgloss.Color(style.ColorToHex(style.GetNeutralColor())), lipgloss.Color(style.ColorToHex(style.GetNeutralColor())))
 
 	s := new(Styles)
 	s.doc = lipgloss.NewStyle()
 	s.inactiveTab = lipgloss.NewStyle().
-		// Border(inactiveTabBorder, true).
 		BorderForeground(highlightColor).
 		Padding(0, 1)
 	s.activeTab = s.inactiveTab.
-		// Border(activeTabBorder, true).
 		Foreground(lipgloss.Color(style.ColorToHex(style.GetPrimaryColor())))
 	s.window = lipgloss.NewStyle().
 		BorderForeground(highlightColor).
@@ -70,13 +57,21 @@ func TabView(m TabModel) string {
 	doc := strings.Builder{}
 	s := m.Styles
 
+	window := s.window
+
 	var renderedTabs []string
 
 	for i, t := range m.Tabs {
 		var style lipgloss.Style
 		isFirst, isLast, isActive := i == 0, i == len(m.Tabs)-1, i == m.ActiveTab
 		if isActive {
-			style = s.activeTab
+			if m.Focused {
+				// only use the primary-colored active style when tabs panel is focused
+				style = s.activeTab
+			} else {
+				// when not focused, render the active tab like an inactive one
+				style = s.inactiveTab
+			}
 		} else {
 			style = s.inactiveTab
 		}
@@ -101,7 +96,7 @@ func TabView(m TabModel) string {
 
 	row := lipgloss.JoinHorizontal(lipgloss.Top, renderedTabs...)
 
-	gapWidth := m.Width - lipgloss.Width(row)
+	gapWidth := m.Width + 5 - lipgloss.Width(row)
 	if gapWidth > 0 {
 		filler := s.gap.Render(strings.Repeat("─", gapWidth-1) + "╮")
 		row = lipgloss.JoinHorizontal(lipgloss.Center, row, filler)
@@ -111,13 +106,13 @@ func TabView(m TabModel) string {
 
 	// Calculate remaining height for content area
 	// Window style overhead: Padding(2,0)=4 rows + border bottom=1 row = 5
-	tabRowHeight := lipgloss.Height(row) + 2 // +1 for the newline
-	contentHeight := m.Height - tabRowHeight - 1
+	tabRowHeight := lipgloss.Height(row) // +1 for the newline
+	//  contentHeight := m.Height - tabRowHeight - 1
 
 	doc.WriteString(
-		s.window.
-			Width(m.Width).
-			Height(contentHeight).
+		window.
+			Width(m.Width + 5).
+			Height(m.Height - tabRowHeight).
 			Align(lipgloss.Left).
 			Render(m.TabContent[m.ActiveTab]),
 	)
@@ -126,11 +121,11 @@ func TabView(m TabModel) string {
 }
 
 func GetTabPanelStyle(width int, height int) lipgloss.Style {
-	halfWidth := int(float64(width) * 0.7)
+	// halfWidth := int(float64(width)*0.7) + 3
 	height = int(float64(height) * 0.93)
 
 	return lipgloss.NewStyle().
-		Width(halfWidth).
+		Width(width).
 		Height(height)
 }
 

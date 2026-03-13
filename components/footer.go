@@ -21,7 +21,7 @@ func GetFooterStyle(windowWidth int, footerHeight int) lipgloss.Style {
 		BorderRight(false).
 		BorderLeft(false).
 		Padding(1, 1).
-		Width(windowWidth - 3).
+		Width(windowWidth).
 		Align(lipgloss.Center).
 		Height(footerHeight)
 }
