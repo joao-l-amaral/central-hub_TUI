@@ -32,8 +32,8 @@ func main() {
 		Foreground(style.GetNeutralColor()).
 		BorderForeground(style.GetPrimaryColor())
 
-	tabs := []string{"Info", "Git History", "batatas"}
-	tabContent := []string{"Info Tab", "Git History Tab", "batatas"}
+	tabs := []string{"Info", "Git History", "Worktrees"}
+	tabContent := []string{"Info Tab", "Git History Tab", "Worktrees"}
 
 	m := model{
 		listModel: components.ListModel{

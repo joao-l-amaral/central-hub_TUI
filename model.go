@@ -97,7 +97,11 @@ func selectProjectInList(m model) model {
 	if selectedItem, ok := m.listModel.List.SelectedItem().(components.ProjectDTO); ok {
 		if selectedItem.IsGit {
 			m.tabModel.TabContent[0] = components.BuildInfoContent(selectedItem)
-			m.tabModel.TabContent[1] = components.BuildHistoryContent(selectedItem)
+			// Only build the potentially expensive git history when the Git History
+			// tab is active. Building it every update caused frequent `git` calls.
+			if m.tabModel.ActiveTab == 1 {
+				m.tabModel.TabContent[1] = components.BuildHistoryContent(selectedItem)
+			}
 		} else {
 			m.tabModel.TabContent[0] = "Project Info"
 			m.tabModel.TabContent[1] = "Git History Tab"

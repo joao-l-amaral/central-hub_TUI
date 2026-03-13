@@ -27,35 +27,36 @@ type Styles struct {
 	gap         lipgloss.Style
 }
 
-func tabBorderWithBottom(left, middle, right string) lipgloss.Border {
-	border := lipgloss.RoundedBorder()
-	border.BottomLeft = left
-	border.Bottom = middle
-	border.BottomRight = right
+func tabBorderWithBottom(left, right string) lipgloss.Border {
+	border := lipgloss.HiddenBorder()
+
+	border.MiddleLeft = left
+	border.MiddleRight = right
+	// border.Bottom = middle
+	// border.BottomRight = right
 	return border
 }
 
 func TabStyles(bgIsDark bool) *Styles {
 	lightDark := lipgloss.LightDark(bgIsDark)
 
-	inactiveTabBorder := tabBorderWithBottom("┴", "─", "┴")
-	activeTabBorder := tabBorderWithBottom("┘", " ", "└")
+	// inactiveTabBorder := tabBorderWithBottom("─", "─")
+	// activeTabBorder := tabBorderWithBottom("─", "─")
 	highlightColor := lightDark(lipgloss.Color(style.ColorToHex(style.GetNeutralColor())), lipgloss.Color(style.ColorToHex(style.GetNeutralColor())))
 
 	s := new(Styles)
 	s.doc = lipgloss.NewStyle()
 	s.inactiveTab = lipgloss.NewStyle().
-		Border(inactiveTabBorder, true).
+		// Border(inactiveTabBorder, true).
 		BorderForeground(highlightColor).
 		Padding(0, 1)
 	s.activeTab = s.inactiveTab.
-		Border(activeTabBorder, true).
+		// Border(activeTabBorder, true).
 		Foreground(lipgloss.Color(style.ColorToHex(style.GetPrimaryColor())))
 	s.window = lipgloss.NewStyle().
 		BorderForeground(highlightColor).
-		Padding(2, 0).
 		Align(lipgloss.Center).
-		Border(lipgloss.NormalBorder()).
+		Border(lipgloss.RoundedBorder()).
 		UnsetBorderTop()
 	s.gap = lipgloss.NewStyle().Foreground(highlightColor)
 	return s
@@ -80,14 +81,19 @@ func TabView(m TabModel) string {
 			style = s.inactiveTab
 		}
 		border, _, _, _, _ := style.GetBorder()
+
+		border.Left = "─"
+		border.Right = "─"
 		if isFirst && isActive {
+			border.Left = "╭"
 			border.BottomLeft = "│"
 		} else if isFirst && !isActive {
-			border.BottomLeft = "└"
+			border.Left = "╭"
+			border.BottomLeft = "│"
 		} else if isLast && isActive {
-			border.BottomRight = "┘"
+			border.Right = "─"
 		} else if isLast && !isActive {
-			border.BottomRight = "┘"
+			border.Right = "─"
 		}
 		style = style.Border(border)
 		renderedTabs = append(renderedTabs, style.Render(t))
@@ -97,8 +103,8 @@ func TabView(m TabModel) string {
 
 	gapWidth := m.Width - lipgloss.Width(row)
 	if gapWidth > 0 {
-		filler := s.gap.Render(strings.Repeat("─", gapWidth-1) + "┐")
-		row = lipgloss.JoinHorizontal(lipgloss.Bottom, row, filler)
+		filler := s.gap.Render(strings.Repeat("─", gapWidth-1) + "╮")
+		row = lipgloss.JoinHorizontal(lipgloss.Center, row, filler)
 	}
 	doc.WriteString(row)
 	doc.WriteString("\n")
