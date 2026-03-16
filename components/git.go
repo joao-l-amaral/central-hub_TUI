@@ -189,3 +189,32 @@ func LoadChangedFiles(project ProjectEntry) []FileChange {
 	}
 	return editedFiles
 }
+
+func GetGitWorktrees(project ProjectEntry) []ProjectDTO {
+	worktrees, _ := gitCmd(project.Path, "worktree", "list")
+
+	var items []ProjectDTO
+	for _, worktree := range strings.Split(strings.TrimSpace(worktrees), "\n") {
+		if worktree == "" {
+			continue
+		}
+		// git worktree list output: "<path>  <hash>  [<branch>]"
+		fields := strings.Fields(worktree)
+		if len(fields) < 1 {
+			continue
+		}
+		path := fields[0]
+		name := path
+		if idx := strings.LastIndexAny(path, "/\\"); idx >= 0 {
+			name = path[idx+1:]
+		}
+		entry := ProjectEntry{
+			Name:    name,
+			Path:    path,
+			IsGit:   true,
+			Options: project.Options,
+		}
+		items = append(items, AddProjectToList(entry))
+	}
+	return items
+}

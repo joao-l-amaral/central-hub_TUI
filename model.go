@@ -2,7 +2,9 @@ package main
 
 import (
 	"central_hub_tui/components"
+	"central_hub_tui/style"
 
+	"charm.land/bubbles/v2/list"
 	tea "charm.land/bubbletea/v2"
 )
 
@@ -18,6 +20,32 @@ const (
 	FocusTab
 )
 
+// projectDataMsg carries the results of async git data loading for a project.
+type projectDataMsg struct {
+	id        string
+	info      string
+	history   string
+	worktrees []components.ProjectDTO
+}
+
+// loadProjectDataCmd runs all git calls for a project in a goroutine.
+func loadProjectDataCmd(project components.ProjectDTO) tea.Cmd {
+	return func() tea.Msg {
+		entry := components.ProjectEntry{
+			Name:    project.Name,
+			Path:    project.Path,
+			IsGit:   project.IsGit,
+			Options: project.Options,
+		}
+		return projectDataMsg{
+			id:        project.ID,
+			info:      components.BuildInfoContent(project),
+			history:   components.BuildHistoryContent(project),
+			worktrees: components.GetGitWorktrees(entry),
+		}
+	}
+}
+
 // Project model
 type model struct {
 	tabModel            components.TabModel
@@ -27,6 +55,7 @@ type model struct {
 	width               int
 	height              int
 	focused             uint
+	lastSelectedID      string
 }
 
 func (m model) Init() tea.Cmd {
@@ -72,6 +101,29 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 		}
+	case projectDataMsg:
+		// Only apply if the user hasn't moved to a different project already.
+		if msg.id == m.lastSelectedID {
+			m.tabModel.TabContent[0] = msg.info
+			m.tabModel.TabContent[1] = msg.history
+
+			delegate := list.NewDefaultDelegate()
+			delegate.Styles.SelectedTitle = delegate.Styles.SelectedTitle.
+				Foreground(style.GetPrimaryColor()).
+				BorderForeground(style.GetPrimaryColor())
+			delegate.Styles.SelectedDesc = delegate.Styles.SelectedDesc.
+				Foreground(style.GetNeutralColor()).
+				BorderForeground(style.GetPrimaryColor())
+
+			items := make([]list.Item, len(msg.worktrees))
+			for i, wt := range msg.worktrees {
+				items[i] = wt
+			}
+			m.projectWorktreeList = components.ProjectWorktreeListModel{
+				List: list.New(items, delegate, 0, 0),
+			}
+		}
+		return m, nil
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
@@ -124,29 +176,29 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.projectWorktreeList.List.SetShowTitle(false)
 	}
 
-	// Update tab content based on current list selection so view shows immediately.
-	m = selectProjectInList(m)
-	//TODO load worktrees when project selection changes and update tab
-	// content if worktree tab is active. using enter and then focus on worktree panel for now
-	// to trigger loading worktrees and updating content.
+	// Detect selection change and fire async git load if needed.
+	var selCmd tea.Cmd
+	m, selCmd = selectProjectInList(m)
 
-	return m, cmd
+	return m, tea.Batch(cmd, selCmd)
 }
 
-// selectProjectInList updates tab content based on the currently selected list item.
-func selectProjectInList(m model) model {
+// selectProjectInList detects a selection change and returns an async cmd to load git data.
+func selectProjectInList(m model) (model, tea.Cmd) {
 	if selectedItem, ok := m.projectListModel.List.SelectedItem().(components.ProjectDTO); ok {
-		if selectedItem.IsGit {
-			m.tabModel.TabContent[0] = components.BuildInfoContent(selectedItem)
-			// Only build the potentially expensive git history when the Git History
-			// tab is active. Building it every update caused frequent `git` calls.
-			if m.tabModel.ActiveTab == 1 {
-				m.tabModel.TabContent[1] = components.BuildHistoryContent(selectedItem)
-			}
-		} else {
-			m.tabModel.TabContent[0] = "Project Info"
-			m.tabModel.TabContent[1] = "Git History Tab"
+		if selectedItem.ID == m.lastSelectedID {
+			return m, nil // nothing changed
 		}
+		m.lastSelectedID = selectedItem.ID
+
+		if selectedItem.IsGit {
+			m.tabModel.TabContent[0] = "Loading..."
+			m.tabModel.TabContent[1] = "Loading..."
+			return m, loadProjectDataCmd(selectedItem)
+		}
+
+		m.tabModel.TabContent[0] = "Project Info"
+		m.tabModel.TabContent[1] = "Git History Tab"
 	}
-	return m
+	return m, nil
 }
