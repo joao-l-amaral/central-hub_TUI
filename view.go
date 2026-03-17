@@ -31,10 +31,10 @@ func (m model) View() tea.View {
 	}
 
 	projectListComponentView := m.projectListModel.List.View()
-	projectListPanel := components.RoundedTitleBox("Projects", projectListComponentView, halfWidth, m.height/2, m.projectListModel.IsSelected, false)
+	projectListPanel := components.RoundedTitleBox("Projects", projectListComponentView, halfWidth, m.height/2, m.projectListModel.IsSelected, false, 0)
 
 	worktreeView := m.projectWorktreeList.List.View()
-	worktreePanel := components.RoundedTitleBox("Worktrees", worktreeView, halfWidth, m.height/2, m.projectWorktreeList.IsSelected, true)
+	worktreePanel := components.RoundedTitleBox("Worktrees", worktreeView, halfWidth, m.height/2, m.projectWorktreeList.IsSelected, true, m.projectWorktreeList.NumberOfWorktrees)
 
 	// mark tabModel focused state so TabView can render focused styling
 	m.tabModel.Focused = (m.focused == FocusTab)

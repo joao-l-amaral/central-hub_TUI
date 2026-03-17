@@ -24,10 +24,11 @@ type ProjectListModel struct {
 }
 
 type ProjectWorktreeListModel struct {
-	List       list.Model
-	window     lipgloss.Style
-	gap        lipgloss.Style
-	IsSelected bool
+	List              list.Model
+	window            lipgloss.Style
+	gap               lipgloss.Style
+	IsSelected        bool
+	NumberOfWorktrees int
 }
 
 type ProjectEntry struct {
@@ -124,7 +125,7 @@ func GetWorktreePanelStyle(width int, height int) lipgloss.Style {
 		Height(height)
 }
 
-func RoundedTitleBox(title, content string, width int, height int, isSelected bool, showCounter bool) string {
+func RoundedTitleBox(title, content string, width int, height int, isSelected bool, showCounter bool, counter int) string {
 	titleLen := len(title) // ╭ title ╮
 	fillerLen := max(0, width-titleLen-8)
 
@@ -142,7 +143,7 @@ func RoundedTitleBox(title, content string, width int, height int, isSelected bo
 
 	titlePrefix := "╭──── "
 	if showCounter {
-		titlePrefix = fmt.Sprintf("╭─[%d] ", 0)
+		titlePrefix = fmt.Sprintf("╭─[%d] ", counter)
 	}
 
 	titleRow := borderStyle.Render(titlePrefix) +

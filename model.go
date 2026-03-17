@@ -119,8 +119,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			for i, wt := range msg.worktrees {
 				items[i] = wt
 			}
+
+			wtWidth := int(float64(m.width)*0.3) - 4
+			wtHeight := int(float64(m.height)*0.3) - 4
 			m.projectWorktreeList = components.ProjectWorktreeListModel{
-				List: list.New(items, delegate, 0, 0),
+				List:              list.New(items, delegate, wtWidth, wtHeight),
+				NumberOfWorktrees: len(msg.worktrees),
+			}
+
+			if len(m.projectWorktreeList.List.Items()) > 0 {
+				m.projectWorktreeList.List.Help.ShowAll = false
+				m.projectWorktreeList.List.SetShowStatusBar(false)
+				m.projectWorktreeList.List.SetShowHelp(false)
+				m.projectWorktreeList.List.SetShowTitle(false)
 			}
 		}
 		return m, nil
@@ -136,6 +147,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Calculate the list width (30% of window width - 2, minus padding)
 		listWidth := int(float64(msg.Width)*0.3) - 4
 		m.projectListModel.List.SetSize(listWidth, listHeight)
+		// if len(m.projectWorktreeList.List.Items()) > 0 {
+		// 	m.projectWorktreeList.List.SetSize(listWidth, listHeight)
+		// }
 
 		if m.width < 20 {
 			m.width = 20
@@ -187,7 +201,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func selectProjectInList(m model) (model, tea.Cmd) {
 	if selectedItem, ok := m.projectListModel.List.SelectedItem().(components.ProjectDTO); ok {
 		if selectedItem.ID == m.lastSelectedID {
-			return m, nil // nothing changed
+			return m, nil
 		}
 		m.lastSelectedID = selectedItem.ID
 

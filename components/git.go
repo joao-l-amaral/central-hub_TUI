@@ -203,6 +203,7 @@ func GetGitWorktrees(project ProjectEntry) []ProjectDTO {
 		if len(fields) < 1 {
 			continue
 		}
+
 		path := fields[0]
 		name := path
 		if idx := strings.LastIndexAny(path, "/\\"); idx >= 0 {
@@ -214,7 +215,9 @@ func GetGitWorktrees(project ProjectEntry) []ProjectDTO {
 			IsGit:   true,
 			Options: project.Options,
 		}
+
 		items = append(items, AddProjectToList(entry))
 	}
+
 	return items
 }
