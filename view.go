@@ -14,7 +14,7 @@ func (m model) View() tea.View {
 
 	halfWidth := int(float64(m.width)*0.3) - 2
 
-	tabStyle := components.GetTabPanelStyle(m.width+10, m.height)
+	tabStyle := components.GetTabPanelStyle(m.width+10, m.height).BorderForeground(lipgloss.Color(style.ColorToHex(style.GetPrimaryColor())))
 	footerStyle := components.GetFooterStyle(m.width, m.footerModel.Height)
 
 	switch m.focused {
@@ -24,10 +24,6 @@ func (m model) View() tea.View {
 	case FocusWorktree:
 		m.projectListModel.IsSelected = false
 		m.projectWorktreeList.IsSelected = true
-	case FocusTab:
-		m.projectListModel.IsSelected = false
-		m.projectWorktreeList.IsSelected = false
-		tabStyle = tabStyle.BorderForeground(lipgloss.Color(style.ColorToHex(style.GetPrimaryColor())))
 	}
 
 	projectListComponentView := m.projectListModel.List.View()
@@ -36,8 +32,8 @@ func (m model) View() tea.View {
 	worktreeView := m.projectWorktreeList.List.View()
 	worktreePanel := components.RoundedTitleBox("Worktrees", worktreeView, halfWidth, m.height/2, m.projectWorktreeList.IsSelected, true, m.projectWorktreeList.NumberOfWorktrees)
 
-	// mark tabModel focused state so TabView can render focused styling
-	m.tabModel.Focused = (m.focused == FocusTab)
+	// tab panel is always "focused" — left/right always change tabs
+	m.tabModel.Focused = true
 	tabView := components.TabView(m.tabModel)
 	tabPanel := tabStyle.Render(tabView)
 

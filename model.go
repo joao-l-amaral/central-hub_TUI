@@ -69,37 +69,25 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "q", "ctrl+c":
 			return m, tea.Quit
 		case "tab":
-			if m.focused+1 > FocusTab {
-				m.focused = FocusProject
-			} else {
-				m.focused = m.focused + 1
-			}
-			return m, nil
-		case "shift+tab":
-			if m.focused == FocusProject {
-				m.focused = FocusTab
-			} else {
-				m.focused = m.focused - 1
+			m.focused = m.focused + 1
+			if m.focused > 1 {
+				m.focused = 0
 			}
 			return m, nil
 		case "left", "h":
-			if m.focused == FocusTab {
-				if m.tabModel.ActiveTab-1 < 0 {
-					m.tabModel.ActiveTab = len(m.tabModel.Tabs) - 1
-				} else {
-					m.tabModel.ActiveTab = max(m.tabModel.ActiveTab-1, 0)
-				}
-				return m, nil
+			if m.tabModel.ActiveTab-1 < 0 {
+				m.tabModel.ActiveTab = len(m.tabModel.Tabs) - 1
+			} else {
+				m.tabModel.ActiveTab = max(m.tabModel.ActiveTab-1, 0)
 			}
+			return m, nil
 		case "right", "l":
-			if m.focused == FocusTab {
-				if m.tabModel.ActiveTab+1 > len(m.tabModel.Tabs)-1 {
-					m.tabModel.ActiveTab = 0
-				} else {
-					m.tabModel.ActiveTab = min(m.tabModel.ActiveTab+1, len(m.tabModel.Tabs)-1)
-				}
-				return m, nil
+			if m.tabModel.ActiveTab+1 > len(m.tabModel.Tabs)-1 {
+				m.tabModel.ActiveTab = 0
+			} else {
+				m.tabModel.ActiveTab = min(m.tabModel.ActiveTab+1, len(m.tabModel.Tabs)-1)
 			}
+			return m, nil
 		}
 	case projectDataMsg:
 		// Only apply if the user hasn't moved to a different project already.
@@ -127,6 +115,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				NumberOfWorktrees: len(msg.worktrees),
 			}
 
+			// Disable worktrees list help/status bars if there are items to avoid UI clutter.
 			if len(m.projectWorktreeList.List.Items()) > 0 {
 				m.projectWorktreeList.List.Help.ShowAll = false
 				m.projectWorktreeList.List.SetShowStatusBar(false)
@@ -147,14 +136,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Calculate the list width (30% of window width - 2, minus padding)
 		listWidth := int(float64(msg.Width)*0.3) - 4
 		m.projectListModel.List.SetSize(listWidth, listHeight)
-		// if len(m.projectWorktreeList.List.Items()) > 0 {
-		// 	m.projectWorktreeList.List.SetSize(listWidth, listHeight)
-		// }
 
 		if m.width < 20 {
 			m.width = 20
 		}
-
 	}
 
 	var cmd tea.Cmd
@@ -167,27 +152,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		} else {
 			cmd = nil
 		}
-	case FocusTab:
-		// Tab view is static (no interactive bubble component here). Handle
-		// key events for tabs above (left/right) so nothing to update here.
-		m.tabModel.Focused = true
-		cmd = nil
 	default:
 		m.projectListModel.List, cmd = m.projectListModel.List.Update(msg)
 	}
 
-	// Configure common list display options for lists that are initialized
+	// Disable project list help/status bars if there are items to avoid UI clutter.
 	if len(m.projectListModel.List.Items()) > 0 {
 		m.projectListModel.List.Help.ShowAll = false
 		m.projectListModel.List.SetShowStatusBar(false)
 		m.projectListModel.List.SetShowHelp(false)
 		m.projectListModel.List.SetShowTitle(false)
-	}
-	if len(m.projectWorktreeList.List.Items()) > 0 {
-		m.projectWorktreeList.List.Help.ShowAll = false
-		m.projectWorktreeList.List.SetShowStatusBar(false)
-		m.projectWorktreeList.List.SetShowHelp(false)
-		m.projectWorktreeList.List.SetShowTitle(false)
 	}
 
 	// Detect selection change and fire async git load if needed.
