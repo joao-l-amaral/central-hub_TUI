@@ -7,6 +7,7 @@ import (
 	"central_hub_tui/style"
 
 	"charm.land/bubbles/v2/list"
+	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
 )
 
@@ -34,6 +35,7 @@ func main() {
 		projectListModel: components.ProjectListModel{
 			List: list.New(items, delegate, 0, 0),
 		},
+		spinnerModel: spinner.New(),
 		tabModel: components.TabModel{
 			Tabs:       tabs,
 			TabContent: tabContent,

@@ -29,6 +29,7 @@ type ProjectWorktreeListModel struct {
 	gap               lipgloss.Style
 	IsSelected        bool
 	NumberOfWorktrees int
+	Loading           bool
 }
 
 type ProjectEntry struct {
@@ -103,28 +104,6 @@ func LoadProjectPaths() []ProjectEntry {
 	return nil
 }
 
-func GetListPanelStyle(width int, height int) lipgloss.Style {
-	halfWidth := int(float64(width)*0.3) - 2
-	height = int(float64(height) / 2)
-
-	return lipgloss.NewStyle().
-		Padding(0, 1).
-		Border(lipgloss.RoundedBorder()).
-		//UnsetBorderTop().
-		Width(halfWidth)
-}
-
-func GetWorktreePanelStyle(width int, height int) lipgloss.Style {
-	halfWidth := int(float64(width)*0.3) - 2
-	height = int(float64(height)/2) - 2
-
-	return lipgloss.NewStyle().
-		Padding(0, 1).
-		Border(lipgloss.RoundedBorder()).
-		Width(halfWidth).
-		Height(height)
-}
-
 func RoundedTitleBox(title, content string, width int, height int, isSelected bool, showCounter bool, counter int) string {
 	titleLen := len(title) // ╭ title ╮
 	fillerLen := max(0, width-titleLen-8)
@@ -160,7 +139,7 @@ func RoundedTitleBox(title, content string, width int, height int, isSelected bo
 		BorderForeground(lipgloss.Color("#FAF4E9")).
 		Padding(1).
 		Width(width).
-		Height(height - 5) // Minus title row
+		Height(height - 4) // Minus title row
 
 	// Join
 	return lipgloss.JoinVertical(lipgloss.Top, titleRow, boxStyle.Render(content))

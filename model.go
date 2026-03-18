@@ -5,6 +5,7 @@ import (
 	"central_hub_tui/style"
 
 	"charm.land/bubbles/v2/list"
+	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
 )
 
@@ -29,7 +30,7 @@ type projectDataMsg struct {
 }
 
 // loadProjectDataCmd runs all git calls for a project in a goroutine.
-func loadProjectDataCmd(project components.ProjectDTO) tea.Cmd {
+func loadProjectDataCmd(worktreeModel components.ProjectWorktreeListModel, project components.ProjectDTO) tea.Cmd {
 	return func() tea.Msg {
 		entry := components.ProjectEntry{
 			Name:    project.Name,
@@ -52,6 +53,7 @@ type model struct {
 	projectListModel    components.ProjectListModel
 	projectWorktreeList components.ProjectWorktreeListModel
 	footerModel         components.FooterModel
+	spinnerModel        spinner.Model
 	width               int
 	height              int
 	focused             uint
@@ -59,7 +61,7 @@ type model struct {
 }
 
 func (m model) Init() tea.Cmd {
-	return nil
+	return m.spinnerModel.Tick
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -124,6 +126,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 		return m, nil
+	case spinner.TickMsg:
+		var spinCmd tea.Cmd
+		m.spinnerModel, spinCmd = m.spinnerModel.Update(msg)
+		return m, spinCmd
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
@@ -182,11 +188,13 @@ func selectProjectInList(m model) (model, tea.Cmd) {
 		if selectedItem.IsGit {
 			m.tabModel.TabContent[0] = "Loading..."
 			m.tabModel.TabContent[1] = "Loading..."
-			return m, loadProjectDataCmd(selectedItem)
+			m.projectWorktreeList.Loading = true
+			return m, loadProjectDataCmd(m.projectWorktreeList, selectedItem)
 		}
 
 		m.tabModel.TabContent[0] = "Project Info"
 		m.tabModel.TabContent[1] = "Git History Tab"
+		m.projectWorktreeList.Loading = false
 	}
 	return m, nil
 }
