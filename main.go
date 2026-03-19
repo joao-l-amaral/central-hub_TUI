@@ -21,11 +21,9 @@ func main() {
 	}
 
 	delegate := list.NewDefaultDelegate()
+	delegate.ShowDescription = false
 	delegate.Styles.SelectedTitle = delegate.Styles.SelectedTitle.
 		Foreground(style.GetPrimaryColor()).
-		BorderForeground(style.GetPrimaryColor())
-	delegate.Styles.SelectedDesc = delegate.Styles.SelectedDesc.
-		Foreground(style.GetNeutralColor()).
 		BorderForeground(style.GetPrimaryColor())
 
 	tabs := []string{"Info", "Git History", "Worktrees"}

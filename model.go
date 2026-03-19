@@ -26,7 +26,7 @@ type projectDataMsg struct {
 	id        string
 	info      string
 	history   string
-	worktrees []components.ProjectDTO
+	worktrees []components.WorktreeItem
 }
 
 // loadProjectDataCmd runs all git calls for a project in a goroutine.
@@ -101,9 +101,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			delegate.Styles.SelectedTitle = delegate.Styles.SelectedTitle.
 				Foreground(style.GetPrimaryColor()).
 				BorderForeground(style.GetPrimaryColor())
-			delegate.Styles.SelectedDesc = delegate.Styles.SelectedDesc.
-				Foreground(style.GetNeutralColor()).
-				BorderForeground(style.GetPrimaryColor())
+			delegate.ShowDescription = false
 
 			items := make([]list.Item, len(msg.worktrees))
 			for i, wt := range msg.worktrees {

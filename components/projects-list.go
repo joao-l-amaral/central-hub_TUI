@@ -23,15 +23,6 @@ type ProjectListModel struct {
 	IsSelected bool
 }
 
-type ProjectWorktreeListModel struct {
-	List              list.Model
-	window            lipgloss.Style
-	gap               lipgloss.Style
-	IsSelected        bool
-	NumberOfWorktrees int
-	Loading           bool
-}
-
 type ProjectEntry struct {
 	Name    string            `json:"name"`
 	Path    string            `json:"path"`
@@ -59,17 +50,16 @@ var projectPaths []ProjectEntry
 
 func AddProjectToList(p ProjectEntry) ProjectDTO {
 	return ProjectDTO{
-		Name:        p.Name,
-		ID:          p.Name,
-		Path:        p.Path,
-		Branch:      LoadProjectGitInfo(p),
-		EditedFiles: LoadChangedFiles(p),
-		IsGit:       p.IsGit,
-		Options:     p.Options,
+		Name:    p.Name,
+		ID:      p.Name,
+		Path:    p.Path,
+		IsGit:   p.IsGit,
+		Options: p.Options,
 	}
 }
+
 func (i ProjectDTO) Title() string       { return i.Name }
-func (i ProjectDTO) Description() string { return i.Branch }
+func (i ProjectDTO) Description() string { return i.Path }
 func (i ProjectDTO) FilterValue() string { return i.Name }
 
 func SetInnerListHeight(msg tea.WindowSizeMsg) int {
