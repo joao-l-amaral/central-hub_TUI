@@ -1,4 +1,4 @@
-package components
+package git
 
 import (
 	"bytes"
@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 
+	"central_hub_tui/components/types"
 	"central_hub_tui/style"
 
 	"charm.land/lipgloss/v2"
@@ -70,7 +71,7 @@ func colorForBranch(branch string) color.Color {
 }
 
 // BuildHistoryContent renders git commit history lazygit-style.
-func BuildHistoryContent(project ProjectDTO) string {
+func BuildHistoryContent(project types.ProjectDTO) string {
 	logOut, err := gitCmd(project.Path, "log", "--pretty=format:%h|%an|%cr|%s", "-n", "15") //TODO set the number os commits showing on available space in the tab
 	if err != nil || strings.TrimSpace(logOut) == "" {
 		return "(no commits)"
@@ -115,7 +116,7 @@ func BuildHistoryContent(project ProjectDTO) string {
 }
 
 // get current branch and status for a project, returning a formatted string with colors and change counts.
-func LoadProjectGitInfo(project ProjectEntry) string {
+func LoadProjectGitInfo(project types.ProjectEntry) string {
 	reBranchClean := regexp.MustCompile(`HEAD detached|fatal`)
 
 	branch, err := gitCmd(project.Path, "rev-parse", "--abbrev-ref", "HEAD")
@@ -150,12 +151,12 @@ func LoadProjectGitInfo(project ProjectEntry) string {
 	return branchDisplay + " " + changes
 }
 
-func LoadChangedFiles(project ProjectEntry) []FileChange {
+func LoadChangedFiles(project types.ProjectEntry) []types.FileChange {
 	rePath := regexp.MustCompile(`^(.{2})\s(.*)$`)
 
 	porcelain, _ := gitCmd(project.Path, "status", "--porcelain")
 
-	var editedFiles []FileChange
+	var editedFiles []types.FileChange
 	if strings.TrimSpace(porcelain) != "" {
 		for _, l := range strings.Split(strings.TrimSpace(porcelain), "\n") {
 			if l == "" {
@@ -184,16 +185,16 @@ func LoadChangedFiles(project ProjectEntry) []FileChange {
 				parts := strings.Split(path, "->")
 				path = strings.TrimSpace(parts[len(parts)-1])
 			}
-			editedFiles = append(editedFiles, FileChange{Path: path, Code: code})
+			editedFiles = append(editedFiles, types.FileChange{Path: path, Code: code})
 		}
 	}
 	return editedFiles
 }
 
-func GetGitWorktrees(project ProjectEntry) []WorktreeItem {
+func GetGitWorktrees(project types.ProjectEntry) []types.WorktreeItem {
 	worktrees, _ := gitCmd(project.Path, "worktree", "list")
 
-	var items []WorktreeItem
+	var items []types.WorktreeItem
 	for i, worktree := range strings.Split(strings.TrimSpace(worktrees), "\n") {
 		if i == 0 {
 			continue
@@ -213,14 +214,25 @@ func GetGitWorktrees(project ProjectEntry) []WorktreeItem {
 		if idx := strings.LastIndexAny(path, "/\\"); idx >= 0 {
 			name = path[idx+1:]
 		}
-		entry := ProjectEntry{
+		entry := types.ProjectEntry{
 			Name:    name,
 			Path:    path,
 			IsGit:   true,
 			Options: project.Options,
 		}
 
-		items = append(items, AddWorktreeToList(entry))
+		items = append(
+			items,
+			types.WorktreeItem{
+				Name:        entry.Name,
+				ID:          entry.Name,
+				Path:        entry.Path,
+				Branch:      LoadProjectGitInfo(entry),
+				EditedFiles: LoadChangedFiles(entry),
+				IsGit:       entry.IsGit,
+				Options:     entry.Options,
+			},
+		)
 	}
 
 	return items

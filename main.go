@@ -4,36 +4,21 @@ import (
 	"log"
 
 	"central_hub_tui/components"
-	"central_hub_tui/style"
+	componentList "central_hub_tui/components/list"
 
-	"charm.land/bubbles/v2/list"
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
 )
 
 func main() {
-	// Load from json file
-	projects := components.LoadProjectPaths()
+	buildProjectList := componentList.BuildProjectList()
 
-	items := make([]list.Item, len(projects))
-	for i, p := range projects {
-		items[i] = components.AddProjectToList(p)
-	}
-
-	delegate := list.NewDefaultDelegate()
-	delegate.ShowDescription = false
-	delegate.Styles.SelectedTitle = delegate.Styles.SelectedTitle.
-		Foreground(style.GetPrimaryColor()).
-		BorderForeground(style.GetPrimaryColor())
-
-	tabs := []string{"Info", "Git History", "Worktrees"}
-	tabContent := []string{"Info Tab", "Git History Tab", "Worktrees"}
+	tabs := []string{"Info", "Git History"}
+	tabContent := []string{"Info Tab", "Git History Tab"}
 
 	m := model{
-		projectListModel: components.ProjectListModel{
-			List: list.New(items, delegate, 0, 0),
-		},
-		spinnerModel: spinner.New(),
+		projectListModel: buildProjectList,
+		spinnerModel:     spinner.New(),
 		tabModel: components.TabModel{
 			Tabs:       tabs,
 			TabContent: tabContent,

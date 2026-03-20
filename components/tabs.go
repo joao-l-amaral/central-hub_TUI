@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"central_hub_tui/components/types"
 	"central_hub_tui/style"
 
 	"charm.land/lipgloss/v2"
@@ -130,7 +131,7 @@ func GetTabPanelStyle(width int, height int) lipgloss.Style {
 }
 
 // buildDetailContent renders the detail pane content for a git project.
-func BuildInfoContent(p ProjectDTO) string {
+func BuildInfoContent(p types.ProjectDTO) string {
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf("Path: %s\n\nBranch: %s%s\n", p.Path, p.Branch, p.Changes))
 	b.WriteString("\nEdited files:\n")
@@ -158,4 +159,8 @@ func BuildInfoContent(p ProjectDTO) string {
 		}
 	}
 	return b.String()
+}
+
+func SetTabContent(m *TabModel, index int, content string) {
+	m.TabContent[index] = content
 }

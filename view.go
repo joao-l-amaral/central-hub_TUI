@@ -2,6 +2,7 @@ package main
 
 import (
 	"central_hub_tui/components"
+	"central_hub_tui/components/list"
 	"central_hub_tui/style"
 
 	tea "charm.land/bubbletea/v2"
@@ -27,7 +28,7 @@ func (m model) View() tea.View {
 	}
 
 	projectListComponentView := m.projectListModel.List.View()
-	projectListPanel := components.RoundedTitleBox("Projects", projectListComponentView, halfWidth, m.height/2, m.projectListModel.IsSelected, false, 0)
+	projectListPanel := list.RoundedTitleBox("Projects", projectListComponentView, halfWidth, m.height/2, m.projectListModel.IsSelected, false, 0)
 
 	var worktreeView string
 	if m.projectWorktreeList.Loading {
@@ -35,7 +36,7 @@ func (m model) View() tea.View {
 	} else {
 		worktreeView = m.projectWorktreeList.List.View()
 	}
-	worktreePanel := components.RoundedTitleBox("Worktrees", worktreeView, halfWidth, m.height/2, m.projectWorktreeList.IsSelected, true, m.projectWorktreeList.NumberOfWorktrees)
+	worktreePanel := list.RoundedTitleBox("Worktrees", worktreeView, halfWidth, m.height/2, m.projectWorktreeList.IsSelected, true, m.projectWorktreeList.NumberOfWorktrees)
 
 	// tab panel is always "focused" — left/right always change tabs
 	m.tabModel.Focused = true
