@@ -5,6 +5,7 @@ import (
 	"central_hub_tui/components/list"
 	"central_hub_tui/components/types"
 	"central_hub_tui/utils/git"
+	"os/exec"
 
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
@@ -89,6 +90,26 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.focused = 1
 			case FocusWorktree:
 				//TODO open the terminal in the path of the selected worktree
+				if selected, ok := m.projectWorktreeList.List.SelectedItem().(types.WorktreeItem); ok {
+					// if err := os.Chdir(selected.Path); err != nil {
+					// 	m.lastAction = "Failed to chdir: " + err.Error()
+					// 	return m, nil
+					// }
+
+					cmd := exec.Command(
+						"pwsh",
+						"-NoProfile",
+						"-ExecutionPolicy", "Bypass",
+						"-File", "scripts/open-wt-tab.ps1",
+						"-TargetPath", selected.Path,
+					)
+					if err := cmd.Start(); err != nil {
+						// m.lastAction = "Failed to open terminal: " + err.Error()
+						return m, nil
+					}
+
+					// m.lastAction = "Navigated to: " + selected.Path
+				}
 			}
 		}
 	case types.ProjectWorktreeDataMsg:
