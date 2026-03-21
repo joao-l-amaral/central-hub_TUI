@@ -71,8 +71,8 @@ func colorForBranch(branch string) color.Color {
 }
 
 // BuildHistoryContent renders git commit history lazygit-style.
-func BuildHistoryContent(project types.ProjectDTO) string {
-	logOut, err := gitCmd(project.Path, "log", "--pretty=format:%h|%an|%cr|%s", "-n", "15") //TODO set the number os commits showing on available space in the tab
+func BuildHistoryContent(path string) string {
+	logOut, err := gitCmd(path, "log", "--pretty=format:%h|%an|%cr|%s", "-n", "19") //TODO set the number os commits showing on available space in the tab
 	if err != nil || strings.TrimSpace(logOut) == "" {
 		return "(no commits)"
 	}
@@ -89,7 +89,7 @@ func BuildHistoryContent(project types.ProjectDTO) string {
 			continue
 		}
 
-		author := lipgloss.NewStyle().Padding(0, 0, 0, 8).Foreground(style.GetNeutralColor()).Bold(true).Render(parts[1])
+		author := lipgloss.NewStyle().Padding(0, 0, 0, 8).Foreground(style.GetNeutralColor()).Bold(true).Render("[" + parts[1] + "]")
 		commitDate := lipgloss.NewStyle().Foreground(style.GetNeutralColor()).Render(parts[2])
 		commitMsg := lipgloss.NewStyle().Align(lipgloss.Left).Foreground(style.GetNeutralColor()).Render(parts[3])
 
@@ -104,9 +104,9 @@ func BuildHistoryContent(project types.ProjectDTO) string {
 		hb.WriteString(" ")
 		hb.WriteString(commitMsg)
 		hb.WriteString("\n")
-		hb.WriteString("   ")
+		hb.WriteString("  ")
 		hb.WriteString(author)
-		hb.WriteString(" ")
+		hb.WriteString(" - ")
 		hb.WriteString(commitDate)
 		if i < len(lines)-1 {
 			hb.WriteString("\n")

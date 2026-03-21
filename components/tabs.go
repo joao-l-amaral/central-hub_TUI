@@ -131,7 +131,7 @@ func GetTabPanelStyle(width int, height int) lipgloss.Style {
 }
 
 // buildDetailContent renders the detail pane content for a git project.
-func BuildInfoContent(p types.ProjectDTO) string {
+func BuildInfoContent(p types.WorktreeItem) string {
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf("Path: %s\n\nBranch: %s%s\n", p.Path, p.Branch, p.Changes))
 	b.WriteString("\nEdited files:\n")

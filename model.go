@@ -33,8 +33,8 @@ func loadProjectDataCmd(project types.ProjectDTO) tea.Cmd {
 		}
 		return types.ProjectWorktreeDataMsg{
 			Id:        project.ID,
-			Info:      components.BuildInfoContent(project),
-			History:   git.BuildHistoryContent(project),
+			Info:      "",
+			History:   "",
 			Worktrees: git.GetGitWorktrees(entry),
 		}
 	}
@@ -83,6 +83,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.tabModel.ActiveTab = min(m.tabModel.ActiveTab+1, len(m.tabModel.Tabs)-1)
 			}
 			return m, nil
+		case "enter":
+			switch m.focused {
+			case FocusProject:
+				m.focused = 1
+			case FocusWorktree:
+				//TODO open the terminal in the path of the selected worktree
+			}
 		}
 	case types.ProjectWorktreeDataMsg:
 		// Only apply if the user hasn't moved to a different project already.
@@ -131,11 +138,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	list.ConfigureListOptions(&m.projectListModel.List)
 
-	// Detect selection change and fire async git load if needed.
+	// Detect selection change and fire async load — only for the focused panel.
 	var selCmd tea.Cmd
-	m, selCmd = selectProjectInList(m)
+	var selWtCmd tea.Cmd
+	switch m.focused {
+	case FocusProject:
+		m, selCmd = selectProjectInList(m)
+	case FocusWorktree:
+		m, selWtCmd = selectWorktreeInList(m)
+	}
 
-	return m, tea.Batch(cmd, selCmd)
+	return m, tea.Batch(cmd, selCmd, selWtCmd)
 }
 
 // selectProjectInList detects a selection change and returns an async cmd to load git data.
@@ -156,6 +169,19 @@ func selectProjectInList(m model) (model, tea.Cmd) {
 		components.SetTabContent(&m.tabModel, 0, "Project Info Tab")
 		components.SetTabContent(&m.tabModel, 1, "Git History Tab")
 		m.projectWorktreeList.Loading = false
+	}
+	return m, nil
+}
+
+func selectWorktreeInList(m model) (model, tea.Cmd) {
+	if selectedItem, ok := m.projectWorktreeList.List.SelectedItem().(types.WorktreeItem); ok {
+		if selectedItem.ID == m.lastSelectedID {
+			return m, nil
+		}
+		m.lastSelectedID = selectedItem.ID
+
+		components.SetTabContent(&m.tabModel, 0, components.BuildInfoContent(selectedItem))
+		components.SetTabContent(&m.tabModel, 1, git.BuildHistoryContent(selectedItem.Path))
 	}
 	return m, nil
 }
