@@ -3,6 +3,7 @@ package main
 import (
 	"central_hub_tui/components"
 	"central_hub_tui/components/list"
+	"central_hub_tui/components/tabs"
 	"central_hub_tui/style"
 
 	tea "charm.land/bubbletea/v2"
@@ -15,7 +16,7 @@ func (m model) View() tea.View {
 
 	halfWidth := int(float64(m.width)*0.3) - 2
 
-	tabStyle := components.GetTabPanelStyle(m.width+10, m.height).BorderForeground(lipgloss.Color(style.ColorToHex(style.GetPrimaryColor())))
+	tabStyle := tabs.GetTabPanelStyle(m.width+10, m.height).BorderForeground(lipgloss.Color(style.ColorToHex(style.GetPrimaryColor())))
 	footerStyle := components.GetFooterStyle(m.width, m.footerModel.Height)
 
 	switch m.focused {
@@ -40,16 +41,16 @@ func (m model) View() tea.View {
 
 	// tab panel is always "focused" — left/right always change tabs
 	m.tabModel.Focused = true
-	tabView := components.TabView(m.tabModel)
+	tabView := tabs.TabView(m.tabModel)
 	tabPanel := tabStyle.Render(tabView)
 
 	footView := components.GetFooterContent(m.footerModel)
 	footer := footerStyle.Render(footView)
 
-	col1 := lipgloss.JoinVertical(lipgloss.Left, projectListPanel, worktreePanel)
-	row1 := lipgloss.JoinHorizontal(lipgloss.Top, col1, tabPanel)
+	col := lipgloss.JoinVertical(lipgloss.Left, projectListPanel, worktreePanel)
+	row := lipgloss.JoinHorizontal(lipgloss.Top, col, tabPanel)
 
-	content := lipgloss.JoinVertical(lipgloss.Left, row1, footer)
+	content := lipgloss.JoinVertical(lipgloss.Left, row, footer)
 	view := tea.NewView(content)
 	view.AltScreen = true
 	view.WindowTitle = "Central Hub"

@@ -5,6 +5,7 @@ import (
 
 	"central_hub_tui/components"
 	componentList "central_hub_tui/components/list"
+	componentTabs "central_hub_tui/components/tabs"
 
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
@@ -14,15 +15,15 @@ func main() {
 	buildProjectList := componentList.BuildProjectList()
 
 	tabs := []string{"Info", "Git History"}
-	tabContent := []string{"Info Tab", "Git History Tab"}
+	tabContent := []string{componentTabs.CentralHubSplash(), ""}
 
 	m := model{
 		projectListModel: buildProjectList,
 		spinnerModel:     spinner.New(),
-		tabModel: components.TabModel{
+		tabModel: componentTabs.TabModel{
 			Tabs:       tabs,
 			TabContent: tabContent,
-			Styles:     components.TabStyles(true),
+			Styles:     componentTabs.TabStyles(true),
 			ActiveTab:  0,
 			Focused:    false,
 		},

@@ -1,4 +1,4 @@
-package components
+package tabs
 
 import (
 	"fmt"
@@ -110,12 +110,18 @@ func TabView(m TabModel) string {
 	tabRowHeight := lipgloss.Height(row) // +1 for the newline
 	//  contentHeight := m.Height - tabRowHeight - 1
 
+	content := m.TabContent[m.ActiveTab]
+	contentAlign := lipgloss.Left
+	if strings.TrimSpace(content) == strings.TrimSpace(CentralHubSplash()) {
+		contentAlign = lipgloss.Center
+	}
+
 	doc.WriteString(
 		window.
 			Width(m.Width + 5).
 			Height(m.Height - tabRowHeight).
-			Align(lipgloss.Left).
-			Render(m.TabContent[m.ActiveTab]),
+			Align(contentAlign).
+			Render(content),
 	)
 
 	return s.doc.Render(doc.String())
@@ -163,4 +169,35 @@ func BuildInfoContent(p types.WorktreeItem) string {
 
 func SetTabContent(m *TabModel, index int, content string) {
 	m.TabContent[index] = content
+}
+
+func CentralHubSplash() string {
+	centralSplash := `
+ █████ ██████ ██   ██ ██████ ██████    ██   ██     
+██     ██     ███  ██   ██   ██   ██  ████  ██     
+██     █████  ████ ██   ██   ██████  ██  ██ ██     
+██     ██     ██ ████   ██   ██ ██   ██████ ██     
+██     ██     ██  ███   ██   ██  ██  ██  ██ ██     
+ █████ ██████ ██   ██   ██   ██   ██ ██  ██ ██████ 
+`
+	restOfSplash := `
+██  ██ ██   ██ ██████     ██████ ██   ██ ██████ 
+██  ██ ██   ██ ██  ██       ██   ██   ██   ██   
+██████ ██   ██ ██████       ██   ██   ██   ██   
+██  ██ ██   ██ ██████       ██   ██   ██   ██   
+██  ██ ██   ██ ██  ██       ██   ██   ██   ██   
+██  ██  █████  ██████       ██    █████  ██████ 
+`
+	row := lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		lipgloss.NewStyle().Foreground(style.GetPrimaryColor()).Render(centralSplash),
+		restOfSplash,
+	)
+	title := lipgloss.JoinHorizontal(
+		lipgloss.Top,
+		lipgloss.NewStyle().Foreground(style.GetPrimaryColor()).Render("CENTRAL"),
+		" HUB",
+	)
+
+	return row + "\n\n" + title
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"central_hub_tui/components"
 	"central_hub_tui/components/list"
+	"central_hub_tui/components/tabs"
 	"central_hub_tui/components/types"
 	"central_hub_tui/utils/git"
 	"os/exec"
@@ -43,7 +44,7 @@ func loadProjectDataCmd(project types.ProjectDTO) tea.Cmd {
 
 // Project model
 type model struct {
-	tabModel            components.TabModel
+	tabModel            tabs.TabModel
 	projectListModel    types.ProjectListModel
 	projectWorktreeList types.ProjectWorktreeListModel
 	footerModel         components.FooterModel
@@ -89,13 +90,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case FocusProject:
 				m.focused = 1
 			case FocusWorktree:
-				//TODO open the terminal in the path of the selected worktree
 				if selected, ok := m.projectWorktreeList.List.SelectedItem().(types.WorktreeItem); ok {
-					// if err := os.Chdir(selected.Path); err != nil {
-					// 	m.lastAction = "Failed to chdir: " + err.Error()
-					// 	return m, nil
-					// }
-
 					cmd := exec.Command(
 						"pwsh",
 						"-NoProfile",
@@ -104,22 +99,22 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						"-TargetPath", selected.Path,
 					)
 					if err := cmd.Start(); err != nil {
-						// m.lastAction = "Failed to open terminal: " + err.Error()
 						return m, nil
 					}
-
-					// m.lastAction = "Navigated to: " + selected.Path
 				}
 			}
 		}
 	case types.ProjectWorktreeDataMsg:
-		// Only apply if the user hasn't moved to a different project already.
-		if msg.Id == m.lastSelectedID {
-			m.tabModel.TabContent[0] = msg.Info
-			m.tabModel.TabContent[1] = msg.History
-
-			m.projectWorktreeList = list.BuildWorktreeList(m.width, m.height, msg)
+		if m.focused == FocusWorktree {
+			// Only apply if the user hasn't moved to a different project already.
+			if msg.Id == m.lastSelectedID {
+				m.tabModel.TabContent[0] = msg.Info
+				m.tabModel.TabContent[1] = msg.History
+			}
 		}
+
+		m.projectWorktreeList = list.BuildWorktreeList(m.width, m.height, msg)
+
 		return m, nil
 	case spinner.TickMsg:
 		var spinCmd tea.Cmd
@@ -181,14 +176,10 @@ func selectProjectInList(m model) (model, tea.Cmd) {
 		m.lastSelectedID = selectedItem.ID
 
 		if selectedItem.IsGit {
-			components.SetTabContent(&m.tabModel, 0, m.spinnerModel.View()+" Loading project info...")
-			components.SetTabContent(&m.tabModel, 1, m.spinnerModel.View()+" Loading git history...")
 			m.projectWorktreeList.Loading = true
 			return m, loadProjectDataCmd(selectedItem)
 		}
 
-		components.SetTabContent(&m.tabModel, 0, "Project Info Tab")
-		components.SetTabContent(&m.tabModel, 1, "Git History Tab")
 		m.projectWorktreeList.Loading = false
 	}
 	return m, nil
@@ -201,8 +192,8 @@ func selectWorktreeInList(m model) (model, tea.Cmd) {
 		}
 		m.lastSelectedID = selectedItem.ID
 
-		components.SetTabContent(&m.tabModel, 0, components.BuildInfoContent(selectedItem))
-		components.SetTabContent(&m.tabModel, 1, git.BuildHistoryContent(selectedItem.Path))
+		tabs.SetTabContent(&m.tabModel, 0, tabs.BuildInfoContent(selectedItem))
+		tabs.SetTabContent(&m.tabModel, 1, git.BuildHistoryContent(selectedItem.Path))
 	}
 	return m, nil
 }
